@@ -1,0 +1,49 @@
+package me.koma.dragonegg.manager;
+
+import java.util.HashSet;
+import java.util.UUID;
+
+public class EggManager {
+
+    public static final HashSet<UUID> eggHolders = new HashSet<>();
+    public static UUID firstHolder = null;
+
+    public static boolean isFirstHolder(UUID uuid) {
+        return firstHolder != null && firstHolder.equals(uuid);
+    }
+}
+package me.koma.dragonegg.listener;
+
+import me.koma.dragonegg.manager.EggManager;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerPortalEvent;
+
+public class DimensionListener implements Listener {
+
+    @EventHandler
+    public void onPortal(PlayerPortalEvent e) {
+        Player p = e.getPlayer();
+
+        if (!EggManager.eggHolders.contains(p.getUniqueId())) return;
+
+        World from = p.getWorld();
+        World to = e.getTo().getWorld();
+
+        // 최초 획득자: 엔드 → 오버월드 1회 허용
+        if (EggManager.isFirstHolder(p.getUniqueId())
+                && from.getEnvironment() == World.Environment.THE_END
+                && to.getEnvironment() == World.Environment.NORMAL) {
+            EggManager.firstHolder = null; // 1회 소모
+            return;
+        }
+
+        e.setCancelled(true);
+        p.sendMessage("§c드래곤 알 보유자는 차원 이동이 제한됩니다.");
+    }
+}
+if (EggManager.firstHolder == null) {
+    EggManager.firstHolder = p.getUniqueId();
+}
