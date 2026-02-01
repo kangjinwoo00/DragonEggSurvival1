@@ -1,0 +1,55 @@
+package me.koma.dragonegg.manager;
+
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
+
+public class DataManager {
+
+    private static File file;
+    private static FileConfiguration config;
+
+    public static void load(File pluginFolder) {
+        file = new File(pluginFolder, "data.yml");
+        if (!file.exists()) {
+            try { file.createNewFile(); }
+            catch (IOException ignored) {}
+        }
+        config = YamlConfiguration.loadConfiguration(file);
+    }
+
+    public static void save() {
+        try { config.save(file); }
+        catch (IOException ignored) {}
+    }
+
+    public static void saveEggData() {
+        config.set("eggHolders", EggManager.eggHolders.stream().map(UUID::toString).toList());
+        config.set("firstHolder", EggManager.firstHolder == null ? null : EggManager.firstHolder.toString());
+        save();
+    }
+
+    public static void loadEggData() {
+        EggManager.eggHolders.clear();
+        for (String s : config.getStringList("eggHolders")) {
+            EggManager.eggHolders.add(UUID.fromString(s));
+        }
+
+        String first = config.getString("firstHolder");
+        if (first != null) {
+            EggManager.firstHolder = UUID.fromString(first);
+        }
+    }
+}
+@Override
+public void onEnable() {
+    DataManager.load(getDataFolder());
+    DataManager.loadEggData();
+}
+
+@Override
+public void onDisable() {
+    DataManager.saveEggData();
+}
